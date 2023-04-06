@@ -1,0 +1,376 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <Windows.h>
+
+using namespace std;
+
+struct Profile   // Профайл студента
+{
+	char surname[20], name[20], patron[20]; // ФИО
+	char sex;         // Пол: M/W
+	char group;        // Номер группы
+	int id;           // Номер студента в списке 
+	int grades[8];    // Оценки за экзамены и диф. зачёты 
+};
+
+int countStudents() // Функция посчёта количества студентов
+{
+	ifstream file("Database.txt");
+	if (file.is_open())  
+	{
+		int temp = 0;
+		string data;
+		while (!file.eof())  // Пока не достигнут конец файла, идёт чтение
+		{
+			getline(file, data);   // Чтение строки файла
+			temp++;
+		}
+		file.close();
+		int n;
+		n = temp;
+		return n;
+	}
+	else
+	{
+		cout << "Error";  // Если не удалось прочитать файл, выдаётся ошибка
+		return 0;
+	}
+}
+
+int newRecord(Profile student[], int& c) {   // Функция создания новой записи о студенте
+	bool no = 0;
+	cout << "Surname: ";
+	cin >> student[c].surname;
+	cout << "Name: ";
+	cin >> student[c].name;
+	cout << "Patronymic: ";
+	cin >> student[c].patron;
+	cout << "Sex (M/W): ";
+	cin >> student[c].sex;
+	while (true) {
+		if ((student[c].sex != 'M') and (student[c].sex != 'W')) {    // Проверка на правилоность ввода пола
+			cout << "Invalid data. Try again.\n";
+			cout << "Sex (M/W): ";
+			cin >> student[c].sex;
+		}
+		else
+			break;
+	}
+	cout << "Group: ";
+	cin >> student[c].group;
+	cout << "ID: ";
+	cin >> student[c].id;
+	cout << "Grades (8): ";
+	for (int k = 0; k < 8; k++) {
+		cin >> student[c].grades[k];
+		if ((student[c].grades[k] < 3) or (student[c].grades[k] > 5))
+			no++;   // Счётчик увеличивается, если введённые оценки недопустимы
+	}
+	if (no == 0) {  
+		for (int i = 0; i < c; i++) {    // Смещаем порядковые номера одногруппников, следующих за новым студентом
+			if (student[i].group == student[c].group) {
+				if ((student[i].id == student[c].id) or (student[i].id > student[c].id))
+					student[i].id++;
+			}
+		}
+		c++;
+		cout << "Record was saved.\n";
+	}
+	else
+		cout << "Found invalid number. Record can't be saved.\n"; 
+	return 0;
+}
+
+int changeRecord(Profile student[], int c) {  // Функция изменения записи о студенте
+	int num;
+	char gr;
+	int found = 0;
+	cout << "Group: ";
+	cin >> gr;   // Вводим номер группы нужного студента
+	cout << "ID: ";
+	cin >> num;   // Вводим порядковый номер студента в группе
+	for (int i = 0; i < c; i++) {
+		if ((student[i].group == gr) and (student[i].id == num)) {   // Находим нужного студента
+			found = 1;
+			cout << "Choose item: \n1 - Surname \n2 - Name \n3 - Patronymic \n";
+			cout << "4 - Sex \n5 - Group \n6 - ID \n7 - Grades \n8 - all \n0 - Exit";
+			cout << "\nYour choice: ";
+			int item_n;
+			cin >> item_n;   // Выбираем, что нужно изменить
+			switch (item_n) {
+			case 0: break;
+			case 1:
+				cout << "Surname: ";
+				cin >> student[i].surname;
+				break;
+			case 2:
+				cout << "Name: ";
+				cin >> student[i].name;
+				break;
+			case 3:
+				cout << "Patronymic: ";
+				cin >> student[i].patron;
+				break;
+			case 4:
+				cout << "Sex: ";
+				cin >> student[i].sex;
+				break;
+			case 5:
+				cout << "Group: ";
+				cin >> student[i].group;
+				break;
+			case 6:
+				cout << "ID: ";
+				cin >> student[i].id;
+				break;
+			case 7:
+				cout << "Grades: ";
+				for (int g = 0; g < 8; g++) {
+					cin >> student[i].grades[g];
+				}
+				break;
+			case 8:
+				cout << "Surname: ";
+				cin >> student[i].surname;
+				cout << "Name: ";
+				cin >> student[i].name;
+				cout << "Patronymic: ";
+				cin >> student[i].patron;
+				cout << "Sex: ";
+				cin >> student[i].sex;
+				cout << "Group: ";
+				cin >> student[i].group;
+				cout << "ID: ";
+				cin >> student[i].id;
+				cout << "Grades: ";
+				for (int g = 0; g < 8; g++) {
+					cin >> student[i].grades[g];
+				}
+				break;
+			}
+			cout << "Changes were saved.\n";
+			break;
+		}
+	}
+	if (found == 0)
+		cout << "Student not found\n";
+	return 0;
+}
+
+int showAllStudents(Profile student[], int c) {  // Функция вывода данных о всех студентах 
+	int temp = 0;
+	for (int i = 0; i < c; i++) {
+		cout << i + 1 << ". " << student[i].surname << " " << student[i].name << " " << student[i].patron << "\n";
+		cout << "Group:" << student[i].group << " ID:" << student[i].id << "\n";
+		cout << "Grades: ";
+		for (int k = 0; k < 8; k++)
+			cout << student[i].grades[k] << " ";
+		cout << "\n";
+		temp++;
+	}
+	if (temp == 0)
+		cout << "No records were found" << endl;
+	return 0;
+}
+
+int showGroup(Profile student[], int c) {   // Функция вывода данных о студентах одной группы
+	int temp = 0;
+	char n;
+	cout << "group: ";
+	cin >> n;
+	for (int i = 0; i < c; i++) // Проходим по всем студентам
+	{
+		if (student[i].group == n) // Сравниваем номер группы текущего студента с введённым номером
+		{
+			cout << student[i].id << ". ";
+			cout << student[i].surname << " " << student[i].name << " " << student[i].patron << "\n";
+			cout << "Term grades: ";
+			for (int j = 0; j < 8; j++)
+				cout << student[i].grades[j] << " ";
+			cout << "\n\n";
+			temp++;
+		}
+	}
+	if (temp == 0) // Если ни одной записи не найдено 
+		cout << "No records were found" << endl;
+	return 0;
+}
+
+int showBestStudents(Profile student[], int c) {  // Функция вывода данных о студента
+	int temp = 0, sum = 0, maxg = 0;
+	float aver;
+	for (int i = 0; i < c; i++) {
+		for (int k = 0; k < 8; k++) {
+			sum += student[i].grades[k];
+		}
+		if (sum >= maxg) {
+			maxg = sum;
+		}
+		if (sum == 40)
+			break;
+		temp++;
+		sum = 0;
+	}
+	aver = maxg / 8.0;
+	cout << "Best students: \n";
+	for (int i = 0; i < c; i++) {
+		for (int k = 0; k < 8; k++) {
+			sum += student[i].grades[k];
+		}
+		if (sum == maxg) {
+			cout << student[i].surname << " " << student[i].name << " " << student[i].patron;
+			cout << "  Group: " << student[i].group << "\n";
+		}
+		sum = 0;
+	}
+	if (temp == 0) // Если ни одной записи не найдено 
+		cout << "No records were found" << endl;
+	else
+		cout << "Average grade: " << aver << "\n";
+	return 0;
+}
+
+int countSex(Profile student[], int c) {   // Функция подсчёта студентов женского и мужского пола
+	int temp = 0, male = 0, female = 0;
+	for (int i = 0; i < c; i++) {
+		if (student[i].sex == 'M')
+			male++;
+		else
+			female++;
+		temp++;
+	}
+	if (temp == 0) // Если ни одной записи не найдено 
+		cout << "No records were found" << endl;
+	else
+		cout << "Male: " << male << " " << "Female: " << female << "\n";
+	return 0;
+}
+
+int sortStipend(Profile student[], int c) {    // Функция вывода данных о студентах с различной успеваемостью
+	int temp = 0, count4 = 0, count3 = 0;
+	string three[30], four[30], five[30];   // Создаём массивы для сортировки студентов по оценкам
+	int i3 = 0, i4 = 0, i5 = 0;
+	for (int i = 0; i < c; i++){
+		for (int k = 0; k < 8; k++) {
+			if (student[i].grades[k] == 3) {    // Если среди оценок есть 3
+				count3++;
+				break;
+			}
+			else if (student[i].grades[k] == 4) {   // Если среди оценок есть 4
+				count4++;
+			}
+		}
+		if ((count4 == 0) and (count3 == 0)) {  // Если среди оценок нет ни 3, ни 4
+			five[i5] = string(student[i].surname) + " " + string(student[i].name) + " " + string(student[i].patron);
+			five[i5] += "  Group: ";
+			five[i5] += student[i].group;   // Запись в массив с отличниками
+			i5++;
+		}
+		else if (count3 == 0) {  // Нет 3, но есть 4
+			four[i4] = string(student[i].surname) + " " + string(student[i].name) + " " + string(student[i].patron);
+			four[i4] += "  Group: ";
+			four[i4] += student[i].group;    // Запись в массив хорошистов
+			i4++;
+		}
+		else {  // Если есть 3
+			three[i3] = string(student[i].surname) + " " + string(student[i].name) + " " + string(student[i].patron);
+			three[i3] += "  Group: ";
+			three[i3] += student[i].group;    // Запись в массив троечников
+			i3++;
+		}
+		count4 = 0;
+		count3 = 0;
+		temp++;
+	}
+	if (temp == 0) // Если ни одной записи не найдено 
+		cout << "No records were found" << endl;
+	else {     // Вывод данных о студентов в соответствии с категориями
+		cout << "Without stipend:\n";
+		for (int i = 0; i < i3; i++)
+			cout << three[i] << "\n";
+		cout << "\nFour and five:\n";
+		for (int i = 0; i < i4; i++)
+			cout << four[i] << "\n";
+		cout << "\nOnly five:\n";
+		for (int i = 0; i < i5; i++)
+			cout << five[i] << "\n";
+	}
+	return 0;
+}
+
+int sortID(Profile student[], int c) {   // Функция вывода данных о студентах с выбранным порядковым номером
+	int temp = 0, k;
+	cout << "ID: ";
+	cin >> k;
+	for (int i = 0; i < c; i++) {
+		if (student[i].id == k) {
+			cout << student[i].surname << " " << student[i].name << " " << student[i].patron;
+			cout << " Group: " << student[i].group << "\n";
+		}
+		temp++;
+	}
+	if (temp == 0) // Если ни одной записи не найдено 
+		cout << "No records were found" << endl;
+	return 0;
+}
+
+int main(){
+	SetConsoleCP(1251);   // Установка русского языка
+	SetConsoleOutputCP(1251);
+
+    Profile student[50];     // Создание массива структур
+	int size;
+	size = countStudents();    // Подсчёт кол-ва студентов в файле
+
+    ifstream file("Database.txt");
+    if (!file.is_open())
+        cout << "Error!";
+	else
+	{
+		if (size == 0)
+			cout << "The file is empty." << endl;  // Если кол-во строк в файле = 0, то он пустой
+		for (int i = 0; i < size; i++) // Считываем данные всех студентов в массив структур
+		{
+			file >> student[i].surname >> student[i].name >> student[i].patron;
+			file >> student[i].sex >> student[i].group >> student[i].id;
+			for (int j = 0; j < 8; j++)
+				file >> student[i].grades[j];
+		}
+		file.close(); // Закрываем файл
+	}
+	string Menu = "Menu: \n1 - Создание новой записи о студенте \n2 - Внесение изменений в уже имеющуюся запись \
+\n3 - Вывод всех данных о студентах \n4 - Вывод информации обо всех студентах одной группы \
+\n5 - Вывод топа студентов с наивысшим средним баллом \n6 - Вывод количества студентов мужского и женского пола \
+\n7 - Вывод данных о студентах c различной успеваемостью \n8 - Вывод данных о студентах, имеющих номер k в списке \
+\n9 - Menu \n0 - Exit\n";
+	cout << Menu;
+	cout << "Your choice: ";
+	string menu_n;
+	cin >> menu_n;    // Выбор пункта меню
+	while (menu_n != "0") {  // Работа с программой продолжится, пока не будет введён 0
+		if (menu_n == "1")
+			newRecord(student, size);
+		else if (menu_n == "2")
+			changeRecord(student, size);
+		else if (menu_n == "3")
+			showAllStudents(student, size);
+		else if (menu_n == "4")
+			showGroup(student, size);
+		else if (menu_n == "5")
+			showBestStudents(student, size);
+		else if (menu_n == "6")
+			countSex(student, size);
+		else if (menu_n == "7")
+			sortStipend(student, size);
+		else if (menu_n == "8")
+			sortID(student, size);
+		else if (menu_n == "9")
+			cout << Menu;
+		else
+			cout << "Invalid number. Try again.\n";   // Если введено недопустимое значение
+		cout << "Your choice: ";
+		cin >> menu_n;    // Повторный ввод значения после выполнения операции
+	}
+	return 0;
+}
